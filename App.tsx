@@ -1,131 +1,109 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import * as React from "react";
+import { Button, Text, View } from "react-native";
+import Modal from "react-native-modal";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator as createStackNavigator } from "@react-navigation/native-stack";
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const Stack = createStackNavigator();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+function InfoModal({
+                       isVisible,
+                       onClose,
+                       title = "",
+                       description = "",
+                       buttonText = "OK",
+                       secondButtonText = "",
+                       secondAction,
+                       thirdButtonText = "",
+                       thirdAction,
+                       bgColor = "black"
+                   }) {
+    return (
+        <Modal isVisible={isVisible}>
+            <View style={{
+                backgroundColor: bgColor,
+                borderRadius: 12,
+                padding: 24,
+                minWidth: 260
+            }}>
+                {title ? (
+                    <Text style={{ fontSize: 18, fontWeight: "bold", color: "#fff", marginBottom: 12 }}>{title}</Text>
+                ) : null}
+                <Text style={{ color: "#eee", marginBottom: 18 }}>{description}</Text>
+                <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+                    <Button title={buttonText} onPress={onClose} />
+                    {secondButtonText
+                        ? <Button title={secondButtonText} onPress={secondAction} />
+                        : null}
+                    {thirdButtonText
+                        ? <Button title={thirdButtonText} onPress={thirdAction} />
+                        : null}
+                </View>
+            </View>
+        </Modal>
+    );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+function HomeScreen({ navigation }) {
+    const [modalVisible, setModalVisible] = React.useState(false);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the reccomendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
-
-  return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
+    return (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <Button title="Show Modal" onPress={() => setModalVisible(true)} />
+            {modalVisible &&<InfoModal
+                isVisible={modalVisible}
+                onClose={() => {
+                    setModalVisible(false);
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: "Second" }]
+                    });
+                }}
+                title="Home Modal"
+                description="This is a test modal on the Home screen."
+                buttonText="RESET NAVIGATION"
+            />
+            }
         </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
-  );
+    );
 }
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+function SecondScreen() {
+    const [modalVisible, setModalVisible] = React.useState(false);
 
-export default App;
+    React.useEffect(() => {
+        setTimeout(() => {
+        setModalVisible(true);
+        }, 1000);
+    }, []);
+
+    return (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <Text>Second Screen</Text>
+            {modalVisible &&<InfoModal
+                isVisible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                title="Second Modal"
+                description="This modal appears when SecondScreen is loaded."
+                buttonText="CLOSE"
+                bgColor='red'
+            />}
+        </View>
+    );
+}
+
+export default function App() {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="Home"
+            screenOptions={{
+            headerShown: false,
+            animation: 'none'
+            }}
+            >
+                <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="Second" component={SecondScreen} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
